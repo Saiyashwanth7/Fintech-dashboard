@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException,Path
+from fastapi import APIRouter, Depends, HTTPException, Path
 from starlette import status
 from pydantic import Field
 from sqlalchemy.orm import Session
@@ -7,6 +7,7 @@ from database import SessionLocal
 from models import FinancialRecords
 from .pydantic_models import TransactionRequest, TransactionUpdateRequest
 from .auth import get_current_user
+from datetime import date
 
 
 def get_db():
@@ -25,8 +26,28 @@ user_dependency = Annotated[dict, Depends(get_current_user)]
 
 
 @router.get("/", status_code=status.HTTP_200_OK)
-async def read_all_transactions(user: user_dependency, db: db_dependency):
-    return db.query(FinancialRecords).filter(FinancialRecords.is_deleted == False).all()
+async def read_all_transactions(
+    user: user_dependency,
+    db: db_dependency,
+    skip: int = 0,
+    limit: int = 10,
+    type: str = None,
+    category: str = None,
+    from_date: date = None,
+    to_date: date = None
+):
+    query = db.query(FinancialRecords).filter(FinancialRecords.is_deleted == False)
+    if type:
+        query.filter(FinancialRecords.type == type)
+    if category:
+        query.filter(FinancialRecords.category == category)
+    if from_date:
+        query.filter(FinancialRecords.date >= from_date)
+    if to_date:
+        query.filter(FinancialRecords.date <= to_date)
+    record = query.offset(skip).limit(limit).all()
+    return {'records':record}
+    
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)  # Admin only
@@ -38,8 +59,13 @@ async def create_transaction(
             status_code=status.HTTP_403_FORBIDDEN, detail="Only for Admins"
         )
     new_transaction = FinancialRecords(
-        **transaction.model_dump(), created_by=user.get("id")
-    )
+            amount = transaction.amount,
+            type = transaction.type.lower().strip(),
+            notes = transaction.notes,
+            category = transaction.category.lower().strip(),
+            date = transaction.date,
+            created_by=user.get("id")
+         )
     db.add(new_transaction)
     db.commit()
     return {"amount": new_transaction.amount, "type": new_transaction.type}
@@ -49,7 +75,12 @@ async def create_transaction(
 async def get_record_by_id(
     user: user_dependency, db: db_dependency, record_id: int = Path(gt=0)
 ):
-    record = db.query(FinancialRecords).filter(FinancialRecords.id == record_id).filter(FinancialRecords.is_deleted==False).first()
+    record = (
+        db.query(FinancialRecords)
+        .filter(FinancialRecords.id == record_id)
+        .filter(FinancialRecords.is_deleted == False)
+        .first()
+    )
     if not record:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -71,9 +102,11 @@ async def update_record(
     db: db_dependency,
     record_id: int = Path(gt=0),
 ):
-    if user.get('role')!='admin':
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,detail='Only for Admins')
-    
+    if user.get("role") != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Only for Admins"
+        )
+
     record = db.query(FinancialRecords).filter(FinancialRecords.id == record_id).first()
     if not record:
         raise HTTPException(
@@ -94,9 +127,11 @@ async def update_record(
 async def delete_record_by_id(
     user: user_dependency, db: db_dependency, record_id: int = Path(gt=0)
 ):
-    if user.get('role')!='admin':
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,detail='Only for Admins')
-    
+    if user.get("role") != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Only for Admins"
+        )
+
     record = db.query(FinancialRecords).filter(FinancialRecords.id == record_id).first()
     if not record:
         raise HTTPException(

@@ -70,3 +70,21 @@ async def update_user_by_id(
     db.commit()
     db.refresh(user_model)
     
+@router.patch('/{user_id}',status_code=status.HTTP_204_NO_CONTENT)
+async def update_status(user: user_dependency,
+    db: db_dependency,
+    user_id: int = Path(gt=0),
+):
+    if user.get("role") != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Only for Admins"
+        )
+    user_model = db.query(Users).filter(Users.id == user_id).first()
+    if not user_model:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
+    user_model.is_active = False
+    db.add(user_model)
+    db.commit()
+    db.refresh(user_model)
