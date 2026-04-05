@@ -3,19 +3,12 @@ from starlette import status
 from pydantic import Field
 from sqlalchemy.orm import Session
 from typing import Annotated
-from database import SessionLocal
+from database import get_db
 from models import FinancialRecords
 from .pydantic_models import TransactionRequest, TransactionUpdateRequest
 from .auth import get_current_user
 from datetime import date
 
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 
 router = APIRouter(prefix="/records", tags=["records"])
@@ -38,13 +31,13 @@ async def read_all_transactions(
 ):
     query = db.query(FinancialRecords).filter(FinancialRecords.is_deleted == False)
     if type:
-        query.filter(FinancialRecords.type == type)
+        query = query.filter(FinancialRecords.type == type.lower())
     if category:
-        query.filter(FinancialRecords.category == category)
+        query = query.filter(FinancialRecords.category == category.lower())
     if from_date:
-        query.filter(FinancialRecords.date >= from_date)
+        query = query.filter(FinancialRecords.date >= from_date)
     if to_date:
-        query.filter(FinancialRecords.date <= to_date)
+        query = query.filter(FinancialRecords.date <= to_date)
     record = query.offset(skip).limit(limit).all()
     return {'records':record}
     

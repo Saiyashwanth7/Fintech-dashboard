@@ -30,5 +30,5 @@ def get_db():
 db_dependency=Annotated[Session,Depends(get_db)]
 
 @app.get('/')
-def read(db:db_dependency):
-    return db.query(Users).all()
+def health_check():
+    return {'Health Status':'Alive'}

@@ -3,20 +3,13 @@ from starlette import status
 from sqlalchemy.orm import Session
 from typing import Annotated
 from passlib.context import CryptContext
-from database import SessionLocal
+from database import get_db
 from models import Users,UserRoles
 from .pydantic_models import UserRequest
 from fastapi.security import OAuth2PasswordRequestForm,OAuth2PasswordBearer
 from jose import jwt,JWTError
 from datetime import datetime,timedelta,timezone
 from config import SECRET_KEY,ALGORITHM
-
-def get_db():
-    db=SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 
 
@@ -78,6 +71,6 @@ async def login_for_token(db:db_dependency,form:Annotated[OAuth2PasswordRequestF
             detail='Invalid credentials'
         )
     return {
-        'access_token': create_access_token(user.email, user.id, user.role, timedelta(minutes=20)),
+        'access_token': create_access_token(user.email, user.id, user.role, timedelta(hours=1)),
         'token_type': 'bearer'
     }

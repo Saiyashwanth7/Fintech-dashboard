@@ -3,20 +3,12 @@ from starlette import status
 from pydantic import Field
 from sqlalchemy.orm import Session
 from typing import Annotated
-from database import SessionLocal
+from database import get_db
 from models import FinancialRecords
 from .pydantic_models import TransactionRequest, TransactionUpdateRequest
 from .auth import get_current_user
 from collections import defaultdict
 from sqlalchemy import extract, func
-
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 
 db_dependency = Annotated[Session, Depends(get_db)]
@@ -55,13 +47,16 @@ async def read_by_category(user: user_dependency, db: db_dependency):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Only for Admins and Analysts"
         )
-    category_balance = defaultdict(lambda: {"income": 0, "expense": 0})
+    category_balance = defaultdict(lambda : {'income':0,'expense':0})
     transactions = (
         db.query(FinancialRecords).filter(FinancialRecords.is_deleted == False).all()
     )
     for record in transactions:
         cat = record.category.lower()
-        category_balance[cat][record.type.lower()] += record.amount
+        if record.type == 'income':
+            category_balance[cat]['income'] += record.amount
+        else:
+            category_balance[cat]['expense'] +=record.amount
     return category_balance
 
 
