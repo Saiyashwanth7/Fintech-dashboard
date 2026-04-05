@@ -1,8 +1,5 @@
-from fastapi import FastAPI,Depends
-from sqlalchemy.orm import Session
-from typing import Annotated
-
-from database import engine,SessionLocal
+from fastapi import FastAPI
+from database import engine
 import models
 from models import *
 from routers.finance import router as record_router
@@ -18,16 +15,6 @@ app.include_router(auth_router)
 app.include_router(record_router)
 app.include_router(users_router)
 app.include_router(dashboard_router)
-
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-    
-db_dependency=Annotated[Session,Depends(get_db)]
 
 @app.get('/')
 def health_check():

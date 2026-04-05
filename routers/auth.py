@@ -23,6 +23,8 @@ def authenticate_user(username,password,db):
     user_model = db.query(Users).filter(Users.email==username).first()
     if not user_model:
         return False
+    if not user_model.is_active:        
+        return False
     if not bcrypt_context.verify(password,user_model.hashed_password):
         return False
     return user_model

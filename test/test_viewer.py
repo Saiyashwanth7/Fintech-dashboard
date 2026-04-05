@@ -27,7 +27,7 @@ def test_read_by_user_id(client,viewer_as_user):
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 # Testing finance.py API end points
-def test_create_transaction(client,analyst_as_user,db):
+def test_create_transaction(client,viewer_as_user,db):
     record = {
         'amount' : 100000,
         'type' : 'income',
@@ -39,7 +39,7 @@ def test_create_transaction(client,analyst_as_user,db):
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_delete_record(client,analyst_as_user,db):
+def test_delete_record(client,viewer_as_user,db):
     response = client.delete('/records/1')
     assert response.status_code == status.HTTP_403_FORBIDDEN
     
