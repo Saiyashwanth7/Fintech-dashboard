@@ -18,7 +18,7 @@ A role-based finance dashboard backend built with FastAPI, SQLAlchemy, and SQLit
 
 ```bash
 # 1. Clone and enter the project
-git clone <repo-url>
+git clone [<repo-url>](https://github.com/Saiyashwanth7/Fintech-dashboard.git)
 cd <project-folder>
 
 # 2. Create virtual environment
