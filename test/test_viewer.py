@@ -28,7 +28,7 @@ def test_read_by_user_id(client,viewer_as_user):
 
 # Testing finance.py API end points
 
-def test_read_all_user(client, viewer_as_user):
+def test_read_all_records(client, viewer_as_user):
     response = client.get('/records/')
     assert response.status_code == status.HTTP_200_OK
     
