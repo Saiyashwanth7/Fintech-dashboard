@@ -29,6 +29,10 @@ def test_read_by_user_id(client,analyst_as_user):
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 # Testing finance.py API end points
+def test_read_all_records(client, analyst_as_user):
+    response = client.get('/records/')
+    assert response.status_code == status.HTTP_200_OK
+
 def test_create_transaction(client,analyst_as_user,db):
     record = {
         'amount' : 100000,

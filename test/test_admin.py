@@ -37,7 +37,6 @@ def test_update_user(client,admin_as_user,db):
     request_data = {
         'name' : 'testing_user',
         'email' : 'testinguser@gmail.com',
-        'password' : 'testinguser',
         'role' : 'viewer'
     }
     response = client.put('/users/1',json=request_data)
@@ -57,7 +56,7 @@ def test_create_transaction(client,admin_as_user,db):
     response = client.post('/records/',json=record)
     assert response.status_code == status.HTTP_201_CREATED
 
-def test_delete_record(client,admin_as_user,db):
+def test_delete_record(client,admin_as_user,sample_records,db):
     response = client.delete('/records/1')
     assert response.status_code == status.HTTP_204_NO_CONTENT
     record = db.query(FinancialRecords).filter(FinancialRecords.id == 1).first()
